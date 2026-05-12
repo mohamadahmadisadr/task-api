@@ -15,13 +15,13 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		CreateTask(w, r)
 	default:
-		http.Error(w, "Not supported", http.StatusBadRequest)
+		writeError(w, "Not supported", http.StatusBadRequest)
 	}
 }
 
 func GetTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Only GEt Method is allowed", http.StatusMethodNotAllowed)
+		writeError(w, "Only Get Method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	tasks := services.GetTask()
@@ -31,18 +31,18 @@ func GetTask(w http.ResponseWriter, r *http.Request) {
 
 func CreateTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Only Post Method is allowed", http.StatusMethodNotAllowed)
+		writeError(w, "Only Post Method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var task models.Task
 	err := json.NewDecoder(r.Body).Decode(&task)
 	if err != nil {
-		http.Error(w, "invalid request", http.StatusBadRequest)
+		writeError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
 	if task.Name == "" {
-		http.Error(w, "Name is required", http.StatusBadRequest)
+		writeError(w, "Name is required", http.StatusBadRequest)
 		return
 	}
 	created := services.CreateTask(task)

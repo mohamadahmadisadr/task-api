@@ -29,7 +29,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/health", healthHandler)
-	http.HandleFunc("/tasks", handlers.TaskHandler)
+	http.HandleFunc("/health", handlers.Logger(healthHandler))
+	http.HandleFunc("/tasks", handlers.Logger(handlers.TaskHandler))
 	http.ListenAndServe(":8080", nil)
 }
