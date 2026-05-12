@@ -35,8 +35,12 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var task models.Task
-	err := json.NewDecoder(r.Body).Decode(&task)
+	var req CreateTaskRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	task := models.Task{
+		Name: req.Name,
+		Done: req.Done,
+	}
 	if err != nil {
 		writeError(w, "invalid request", http.StatusBadRequest)
 		return
