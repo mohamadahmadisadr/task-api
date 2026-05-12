@@ -41,12 +41,13 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	if task.Name == "" {
-		writeError(w, "Name is required", http.StatusBadRequest)
+	if errMsg := validateTask(task); errMsg != "" {
+		writeError(w, errMsg, http.StatusBadRequest)
 		return
 	}
 	created := services.CreateTask(task)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(created)
+
 }
