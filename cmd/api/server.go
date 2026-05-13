@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"task-api/internal/config"
 	"task-api/internal/handlers"
 	"task-api/internal/services"
+	"time"
 )
 
 func startServer() {
@@ -14,9 +19,32 @@ func startServer() {
 	taskHandler := handlers.NewTaskHandler(taskService)
 	router := handlers.RegisterRoutes(taskHandler)
 	cfg := config.Load()
-	log.Printf("server running on port :%s", cfg.Port)
-	err := http.ListenAndServe(":"+cfg.Port, router)
+
+	srv := &http.Server{
+		Addr:    ":" + cfg.Port,
+		Handler: router,
+	}
+
+	go func() {
+		log.Printf("server running on port :%s", cfg.Port)
+		err := srv.ListenAndServe()
+		if err != nil && err != http.ErrServerClosed {
+			log.Fatal(err)
+		}
+	}()
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	log.Println("shutting down server...")
+
+	err := srv.Shutdown(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Println("server stopped")
 }
