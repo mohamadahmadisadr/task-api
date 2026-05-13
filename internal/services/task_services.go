@@ -1,26 +1,26 @@
 package services
 
 import (
-	"sync"
 	"task-api/internal/models"
 )
 
-var mu sync.Mutex
-
-var Tasks = []models.Task{}
-
-func GetTask() []models.Task {
-	mu.Lock()
-	defer mu.Unlock()
-	return Tasks
+type TaskService struct {
+	tasks []models.Task
 }
 
-func CreateTask(task models.Task) models.Task {
+func NewTaskService() *TaskService {
+	return &TaskService{
+		tasks: []models.Task{},
+	}
+}
 
-	mu.Lock()
-	defer mu.Unlock()
+func (s *TaskService) GetTask() []models.Task {
+	return s.tasks
+}
 
-	task.ID = len(Tasks) + 1
-	Tasks = append(Tasks, task)
+func (s *TaskService) CreateTask(task models.Task) models.Task {
+
+	task.ID = len(s.tasks) + 1
+	s.tasks = append(s.tasks, task)
 	return task
 }

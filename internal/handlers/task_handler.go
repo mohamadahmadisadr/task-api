@@ -7,29 +7,39 @@ import (
 	"task-api/internal/services"
 )
 
-func TaskHandler(w http.ResponseWriter, r *http.Request) {
+type TaskHandler struct {
+	service *services.TaskService
+}
+
+func NewTaskHandler(service *services.TaskService) *TaskHandler {
+	return &TaskHandler{
+		service: service,
+	}
+}
+
+func (h *TaskHandler) TaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case http.MethodGet:
-		GetTask(w, r)
+		h.GetTask(w, r)
 	case http.MethodPost:
-		CreateTask(w, r)
+		h.CreateTask(w, r)
 	default:
 		writeError(w, "Not supported", http.StatusBadRequest)
 	}
 }
 
-func GetTask(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, "Only Get Method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tasks := services.GetTask()
+	tasks := h.service.GetTask()
 
 	json.NewEncoder(w).Encode(tasks)
 }
 
-func CreateTask(w http.ResponseWriter, r *http.Request) {
+func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		writeError(w, "Only Post Method is allowed", http.StatusMethodNotAllowed)
 		return
@@ -49,7 +59,7 @@ func CreateTask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, errMsg, http.StatusBadRequest)
 		return
 	}
-	created := services.CreateTask(task)
+	created := h.service.CreateTask(task)
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(created)
