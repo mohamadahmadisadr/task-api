@@ -8,17 +8,25 @@ func RegisterRoutes(taskHandler *TaskHandler) http.Handler {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/tasks", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			taskHandler.GetTask(w, r)
+
+		if r.URL.Path == "/tasks" {
+			switch r.Method {
+			case http.MethodGet:
+				taskHandler.GetTask(w, r)
+			case http.MethodPost:
+				taskHandler.CreateTask(w, r)
+
+			default:
+				writeError(w, "Not Implemented", http.StatusBadRequest)
+			}
+
 			return
 		}
 
-		if r.Method == http.MethodPost {
-			taskHandler.CreateTask(w, r)
-			return
-		}
+	})
 
-		writeError(w, "Method now allowed", http.StatusBadRequest)
+	mux.HandleFunc("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
+		taskHandler.TaskByID(w, r)
 	})
 	return Logger(mux)
 }

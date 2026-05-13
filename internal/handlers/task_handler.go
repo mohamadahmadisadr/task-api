@@ -3,6 +3,8 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
+	"strings"
 	"task-api/internal/models"
 	"task-api/internal/services"
 )
@@ -51,5 +53,59 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(created)
+
+}
+
+func (h *TaskHandler) TaskByID(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	parts := strings.Split(path, "/")
+	idStr := parts[2]
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		writeError(w, "Invalid ID", http.StatusBadRequest)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		task, found := h.service.GetTaskById(id)
+		if !found {
+			writeError(w, "Task Not Found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(task)
+	case http.MethodDelete:
+		ok := h.service.DeleteTaskByID(id)
+		if !ok {
+			writeError(w, "Task Not Found", http.StatusNotFound)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	case http.MethodPut:
+		var req CreateTaskRequest
+		err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			writeError(w, "invalid request body", http.StatusBadRequest)
+			return
+		}
+		if errMsg := validateTask(models.Task{Name: req.Name, Done: req.Done}); errMsg != "" {
+			writeError(w, errMsg, http.StatusBadRequest)
+			return
+		}
+		updated, ok := h.service.UpdateTaskByID(id, models.Task{
+			Name: req.Name,
+			Done: req.Done,
+		})
+		if !ok {
+			writeError(w, "task not found", http.StatusNotFound)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(updated)
+
+	default:
+		writeError(w, "Method Not allowed", http.StatusBadRequest)
+
+	}
 
 }
