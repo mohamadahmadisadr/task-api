@@ -11,9 +11,9 @@ func startServer() {
 
 	taskService := services.NewTaskService()
 	taskHandler := handlers.NewTaskHandler(taskService)
-	http.HandleFunc("/tasks", handlers.Logger(taskHandler.TaskHandler))
+	router := handlers.RegisterRoutes(taskHandler)
 	log.Println("server running on port :8080")
-	err := http.ListenAndServe(":8080", nil)
+	err := http.ListenAndServe(":8080", router)
 	if err != nil {
 		log.Fatal(err)
 	}

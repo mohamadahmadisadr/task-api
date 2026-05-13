@@ -17,18 +17,6 @@ func NewTaskHandler(service *services.TaskService) *TaskHandler {
 	}
 }
 
-func (h *TaskHandler) TaskHandler(w http.ResponseWriter, r *http.Request) {
-
-	switch r.Method {
-	case http.MethodGet:
-		h.GetTask(w, r)
-	case http.MethodPost:
-		h.CreateTask(w, r)
-	default:
-		writeError(w, "Not supported", http.StatusBadRequest)
-	}
-}
-
 func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, "Only Get Method is allowed", http.StatusMethodNotAllowed)
