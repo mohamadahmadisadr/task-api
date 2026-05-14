@@ -26,7 +26,7 @@ func (r *TaskRepository) GetTasks() ([]models.Task, error) {
 
 	defer rows.Close()
 
-	var tasks []models.Task
+	tasks := []models.Task{}
 
 	for rows.Next() {
 		var task models.Task
@@ -43,4 +43,93 @@ func (r *TaskRepository) GetTasks() ([]models.Task, error) {
 		tasks = append(tasks, task)
 	}
 	return tasks, nil
+}
+
+func (r *TaskRepository) CreateTask(task models.Task) (*models.Task, error) {
+	query := `
+		INSERT INTO tasks (name, done)
+		VALUES ($1, $2)
+		RETURNING id
+	`
+	err := r.db.QueryRow(
+		query,
+		task.Name,
+		task.Done,
+	).Scan(&task.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &task, nil
+}
+
+func (r *TaskRepository) GetTaskByID(id int) (*models.Task, bool) {
+	row := r.db.QueryRow(`
+		SELECT id, name, done
+		FROM tasks
+		WHERE id = $1
+	`, id)
+
+	var task models.Task
+	err := row.Scan(
+		&task.ID,
+		&task.Name,
+		&task.Done,
+	)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return &task, true
+}
+
+func (r *TaskRepository) DeleteTaskByID(id int) bool {
+	result, err := r.db.Exec(`
+		DELETE FROM tasks
+		WHERE id = $1
+	`, id)
+
+	if err != nil {
+		return false
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false
+	}
+
+	return rowsAffected > 0
+}
+
+func (r *TaskRepository) UpdateTaskByID(id int, updated models.Task) (*models.Task, bool) {
+	row := r.db.QueryRow(`
+		SELECT id, name, done
+		FROM tasks
+		WHERE id = $1
+	`, id)
+
+	var task models.Task
+	err := row.Scan(
+		&task.ID,
+		&task.Name,
+		&task.Done,
+	)
+
+	if err != nil {
+		return nil, false
+	}
+
+	_, err = r.db.Exec(`
+		UPDATE tasks
+		SET name = $1, done = $2
+		WHERE id = $3
+	`, updated.Name, updated.Done, id)
+
+	if err != nil {
+		return nil, false
+	}
+
+	return &task, true
 }

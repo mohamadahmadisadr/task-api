@@ -10,6 +10,7 @@ import (
 	"task-api/internal/config"
 	"task-api/internal/database"
 	"task-api/internal/handlers"
+	"task-api/internal/repository"
 	"task-api/internal/services"
 	"time"
 )
@@ -18,8 +19,8 @@ func startServer() {
 
 	db := database.Connect()
 	defer db.Close()
-
-	taskService := services.NewTaskService()
+	taskrepo := repository.NewTaskRepository(db)
+	taskService := services.NewTaskService(taskrepo)
 	taskHandler := handlers.NewTaskHandler(taskService)
 	router := handlers.RegisterRoutes(taskHandler)
 	cfg := config.Load()

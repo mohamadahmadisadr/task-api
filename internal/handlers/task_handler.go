@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"task-api/internal/dto"
 	"task-api/internal/models"
 	"task-api/internal/services"
 )
@@ -24,7 +25,11 @@ func (h *TaskHandler) GetTask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, "Only Get Method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	tasks := h.service.GetTask()
+	tasks, err := h.service.GetTask()
+	if err != nil {
+		writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
 	json.NewEncoder(w).Encode(tasks)
 }
@@ -49,10 +54,19 @@ func (h *TaskHandler) CreateTask(w http.ResponseWriter, r *http.Request) {
 		writeError(w, errMsg, http.StatusBadRequest)
 		return
 	}
-	created := h.service.CreateTask(task)
+	created, err := h.service.CreateTask(task)
+	if err != nil {
+		writeError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(created)
+	resp := dto.TaskResponse{
+		ID:   created.ID,
+		Name: created.Name,
+		Done: task.Done,
+	}
+	json.NewEncoder(w).Encode(resp)
 
 }
 
