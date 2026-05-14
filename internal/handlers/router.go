@@ -28,5 +28,5 @@ func RegisterRoutes(taskHandler *TaskHandler) http.Handler {
 	mux.HandleFunc("/tasks/{id}", func(w http.ResponseWriter, r *http.Request) {
 		taskHandler.TaskByID(w, r)
 	})
-	return Logger(mux)
+	return Recovery(Logger(mux))
 }
