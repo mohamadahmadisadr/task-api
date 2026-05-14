@@ -8,12 +8,16 @@ import (
 	"os/signal"
 	"syscall"
 	"task-api/internal/config"
+	"task-api/internal/database"
 	"task-api/internal/handlers"
 	"task-api/internal/services"
 	"time"
 )
 
 func startServer() {
+
+	db := database.Connect()
+	defer db.Close()
 
 	taskService := services.NewTaskService()
 	taskHandler := handlers.NewTaskHandler(taskService)
